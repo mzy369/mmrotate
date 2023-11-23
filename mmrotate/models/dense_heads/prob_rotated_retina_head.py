@@ -422,9 +422,12 @@ class ProbabilisticRetinaNetHead(RotatedAnchorHead):
             det_bboxes, det_labels, keep = multiclass_nms_rotated(
                 mlvl_bboxes, mlvl_scores, cfg.score_thr, cfg.nms,
                 cfg.max_per_img, return_inds=True)
+            # todo bboxes_conv shape as N*5*5, how to do with it? transfer it to (N,)?
             det_bboxes_cov = mlvl_bboxes_cov[keep]
-            # todo bboxes shape as N*5*5, how to do with it? transfer it to (N,)?
-            return torch.cat([det_bboxes, det_bboxes_cov[:, None]], 1), det_labels
+            diagonal_variances = torch.diagonal(det_bboxes_cov, dim1=-2, dim2=-1)
+            diagonal_variances = 2 * torch.sigmoid(diagonal_variances) - 1
+            det_bboxes_uncertainty = torch.mean(diagonal_variances, dim=-1)
+            return torch.cat([det_bboxes, det_bboxes_uncertainty[:, None]], 1), det_labels
         else:
             return mlvl_bboxes, mlvl_scores
 
