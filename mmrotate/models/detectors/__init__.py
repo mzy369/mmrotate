@@ -12,7 +12,7 @@ from .rotated_retinanet import RotatedRetinaNet
 from .s2anet import S2ANet
 from .single_stage import RotatedSingleStageDetector
 from .two_stage import RotatedTwoStageDetector
-from prob_rotated_retinanet import ProbabilisticRotatedRetinaNet
+from .prob_rotated_retinanet import ProbabilisticRotatedRetinaNet
 
 __all__ = [
     'RotatedRetinaNet', 'RotatedFasterRCNN', 'OrientedRCNN', 'RoITransformer',
