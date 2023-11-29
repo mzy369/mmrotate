@@ -51,10 +51,10 @@ model = dict(
             target_stds=(1.0, 1.0, 1.0, 1.0, 1.0)),
         loss_cls=dict(
             type='ProbabilisticFocalLoss',
-            use_sigmoid=True,
             gamma=2.0,
             alpha=0.25,
-            loss_weight=1.0),
+            loss_weight=1.0,
+            compute_cls_var=True),
         loss_bbox=dict(type='ProbabilisticL1Loss', loss_weight=1.0)),
     train_cfg=dict(
         assigner=dict(

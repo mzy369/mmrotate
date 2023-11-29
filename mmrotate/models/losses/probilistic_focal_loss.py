@@ -88,12 +88,14 @@ class ProbabilisticFocalLoss(nn.Module):
                  gamma=2.0,
                  alpha=0.25,
                  reduction='mean',
-                 loss_weight=1.0):
+                 loss_weight=1.0,
+                 compute_cls_var=True):
         super(ProbabilisticFocalLoss, self).__init__()
         self.gamma = gamma
         self.alpha = alpha
         self.reduction = reduction
         self.loss_weight = loss_weight
+        self.compute_cls_var = compute_cls_var
 
     def forward(self,
                 pred,
@@ -101,11 +103,11 @@ class ProbabilisticFocalLoss(nn.Module):
                 logits_var=None,
                 weight=None,
                 avg_factor=None,
-                reduction_override=None,
-                compute_cls_var=True):
+                reduction_override=None):
         """Forward function.
 
         Args:
+            compute_cls_var:
             logits_var:
             pred (torch.Tensor): The prediction.
             target (torch.Tensor): The learning label of the prediction.
@@ -124,7 +126,7 @@ class ProbabilisticFocalLoss(nn.Module):
         reduction = (
             reduction_override if reduction_override else self.reduction)
 
-        if compute_cls_var:
+        if self.compute_cls_var:
             loss_cls = self.loss_weight * probabilistic_focal_loss(
                 pred,
                 target,
@@ -135,7 +137,7 @@ class ProbabilisticFocalLoss(nn.Module):
                 reduction=reduction,
                 avg_factor=avg_factor)
         else:
-            loss_cls = sigmoid_focal_loss(
+            loss_cls = self.loss_weight * sigmoid_focal_loss(
                 pred,
                 target,
                 weight,
