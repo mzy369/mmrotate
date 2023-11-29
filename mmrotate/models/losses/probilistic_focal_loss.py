@@ -58,6 +58,12 @@ def probabilistic_focal_loss(pred,
         (target.shape[1] * num_samples, -1))
     target = target.squeeze(1)
 
+    if weight is not None:
+        weight = torch.unsqueeze(weight, 0)
+        weight = torch.repeat_interleave(weight, num_samples, dim=0).view(
+            (weight.shape[1] * num_samples, -1))
+        weight = weight.squeeze(1)
+
     loss = sigmoid_focal_loss(
         stochastic_logits,
         target,
