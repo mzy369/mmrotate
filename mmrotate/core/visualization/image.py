@@ -7,7 +7,7 @@ import numpy as np
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Polygon
 from mmdet.core.visualization import palette_val
-from mmdet.core.visualization.image import draw_masks
+from mmdet.core.visualization.image import draw_masks, draw_labels
 
 from mmrotate.core.visualization.palette import get_palette
 
@@ -348,7 +348,7 @@ def imshow_det_prob_rbboxes(img,
         scales = _get_adaptive_scales(areas)
         scores = bboxes[:, 5] if bboxes.shape[1] >= 6 else None
         uncertainties = bboxes[:, 6] if bboxes.shape[1] >= 7 else None
-        draw_labels(
+        draw_labels_with_uncertainty(
             ax,
             labels[:num_bboxes],
             positions,
@@ -416,7 +416,7 @@ def imshow_det_prob_rbboxes(img,
     return img
 
 
-def draw_labels(ax,
+def draw_labels_with_uncertainty(ax,
                 labels,
                 positions,
                 scores=None,
@@ -449,11 +449,10 @@ def draw_labels(ax,
             label] if class_names is not None else f'class {label}'
         if scores is not None:
             label_text += f'|{scores[i]:.02f}'
-        text_color = color[i] if isinstance(color, list) else color
-
         # todo 不确定性要怎么展示呢？
         if uncertainties is not None:
-            pass
+            label_text += f'|{uncertainties[i]:.02f}'
+        text_color = color[i] if isinstance(color, list) else color
         font_size_mask = font_size if scales is None else font_size * scales[i]
         ax.text(
             pos[0],

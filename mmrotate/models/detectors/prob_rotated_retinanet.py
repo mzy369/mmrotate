@@ -8,6 +8,7 @@ import torch
 from ..builder import ROTATED_DETECTORS
 from .single_stage import RotatedSingleStageDetector
 from ... import imshow_det_rbboxes
+from ...core.visualization.image import imshow_det_prob_rbboxes
 
 
 @ROTATED_DETECTORS.register_module()
@@ -119,7 +120,7 @@ class ProbabilisticRotatedRetinaNet(RotatedSingleStageDetector, ABC):
         if out_file is not None:
             show = False
         # draw bounding boxes
-        img = imshow_det_rbboxes(
+        img = imshow_det_prob_rbboxes(
             img,
             bboxes,
             labels,
