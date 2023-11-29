@@ -9,11 +9,21 @@ from mmdet.models.losses import smooth_l1_loss, SmoothL1Loss
 from ..builder import ROTATED_LOSSES
 
 
-@weighted_loss
-def probabilistic_l1_loss(pred, target, bbox_conv, beta=1.0):
+def probabilistic_l1_loss(pred,
+                          target,
+                          bbox_conv,
+                          weight=None,
+                          beta=1.0,
+                          reduction=None,
+                          avg_factor=None,
+                          **kwargs
+                          ):
     """Smooth L1 loss.
 
     Args:
+        weight:
+        avg_factor:
+        reduction:
         bbox_conv:
         pred (torch.Tensor): The prediction.
         target (torch.Tensor): The learning target of the prediction.
@@ -27,7 +37,12 @@ def probabilistic_l1_loss(pred, target, bbox_conv, beta=1.0):
     loss_box_reg = 0.5 * torch.exp(-bbox_cov) * smooth_l1_loss(
         pred,
         target,
-        beta=beta)
+        weight,
+        beta=beta,
+        reduction=reduction,
+        avg_factor=avg_factor,
+        **kwargs
+    )
 
     loss_covariance_regularize = 0.5 * bbox_cov
     loss_box_reg += loss_covariance_regularize
@@ -60,7 +75,7 @@ class ProbabilisticL1Loss(nn.Module):
     def forward(self,
                 pred,
                 target,
-                bbox_conv=None,
+                bbox_conv,
                 weight=None,
                 avg_factor=None,
                 reduction_override=None,
@@ -91,7 +106,7 @@ class ProbabilisticL1Loss(nn.Module):
                 avg_factor=avg_factor,
                 **kwargs)
         else:
-            loss_bbox = smooth_l1_loss(
+            loss_bbox = self.loss_weight * smooth_l1_loss(
                 pred,
                 target,
                 weight,
