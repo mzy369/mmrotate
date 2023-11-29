@@ -85,12 +85,14 @@ class ProbabilisticFocalLoss(nn.Module):
     """
 
     def __init__(self,
+                 use_sigmoid=True,
                  gamma=2.0,
                  alpha=0.25,
                  reduction='mean',
                  loss_weight=1.0,
                  compute_cls_var=True):
         super(ProbabilisticFocalLoss, self).__init__()
+        self.use_sigmoid = use_sigmoid
         self.gamma = gamma
         self.alpha = alpha
         self.reduction = reduction
