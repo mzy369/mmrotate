@@ -48,10 +48,15 @@ def probabilistic_focal_loss(pred,
         (stochastic_logits.shape[1] * num_samples, stochastic_logits.shape[2], -1))
     stochastic_logits = stochastic_logits.squeeze(2)
 
+    # target = torch.unsqueeze(target, 0)
+    # target = torch.repeat_interleave(target, num_samples, dim=0).view(
+    #     (target.shape[1] * num_samples, target.shape[2], -1))
+    # target = target.squeeze(2)
+
     target = torch.unsqueeze(target, 0)
     target = torch.repeat_interleave(target, num_samples, dim=0).view(
-        (target.shape[1] * num_samples, target.shape[2], -1))
-    target = target.squeeze(2)
+        (target.shape[1] * num_samples, -1))
+    target = target.squeeze(1)
 
     loss = sigmoid_focal_loss(
         stochastic_logits,

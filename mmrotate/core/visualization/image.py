@@ -417,15 +417,15 @@ def imshow_det_prob_rbboxes(img,
 
 
 def draw_labels_with_uncertainty(ax,
-                labels,
-                positions,
-                scores=None,
-                uncertainties=None,
-                class_names=None,
-                color='w',
-                font_size=8,
-                scales=None,
-                horizontal_alignment='left'):
+                                 labels,
+                                 positions,
+                                 scores=None,
+                                 uncertainties=None,
+                                 class_names=None,
+                                 color='w',
+                                 font_size=8,
+                                 scales=None,
+                                 horizontal_alignment='left'):
     """Draw labels on the axes.
 
     Args:
