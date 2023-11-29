@@ -45,6 +45,7 @@ class ProbabilisticRetinaNetHead(RotatedAnchorHead):
                  compute_cls_var=None,
                  compute_bbox_cov=None,
                  bbox_cov_dims=None,
+                 cls_var_num_samples=None,
                  **kwargs):
         self.stacked_convs = stacked_convs
         self.conv_cfg = conv_cfg
@@ -63,6 +64,7 @@ class ProbabilisticRetinaNetHead(RotatedAnchorHead):
         self.bbox_cov_dims = bbox_cov_dims
         self.use_dropout = use_dropout
         self.dropout_rate = dropout_rate
+        self.cls_var_num_samples = cls_var_num_samples
 
     def _init_layers(self):
         """Initialize layers of the head."""
@@ -355,7 +357,7 @@ class ProbabilisticRetinaNetHead(RotatedAnchorHead):
             cls_dists = torch.distributions.normal.Normal(
                 cls_score, scale=torch.sqrt(torch.exp(cls_var))
             )
-            cls_score = cls_dists.rsample((10,))
+            cls_score = cls_dists.rsample((self.cls_var_num_samples,))
             cls_score = torch.mean(cls_score.sigmoid(), 0)
             if self.use_sigmoid_cls:
                 scores = cls_score.sigmoid()
