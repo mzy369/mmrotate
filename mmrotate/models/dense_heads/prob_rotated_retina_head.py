@@ -50,21 +50,18 @@ class ProbabilisticRetinaNetHead(RotatedAnchorHead):
         self.stacked_convs = stacked_convs
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
-        super(ProbabilisticRetinaNetHead, self).__init__(
-            num_classes,
-            in_channels,
-            anchor_generator=anchor_generator,
-            init_cfg=init_cfg,
-            **kwargs)
-
-        num_convs = 4  # 4
-        prior_prob = 0.01  # 0.01
         self.compute_cls_var = compute_cls_var
         self.compute_bbox_cov = compute_bbox_cov
         self.bbox_cov_dims = bbox_cov_dims
         self.use_dropout = use_dropout
         self.dropout_rate = dropout_rate
         self.cls_var_num_samples = cls_var_num_samples
+        super(ProbabilisticRetinaNetHead, self).__init__(
+            num_classes,
+            in_channels,
+            anchor_generator=anchor_generator,
+            init_cfg=init_cfg,
+            **kwargs)
 
     def _init_layers(self):
         """Initialize layers of the head."""
