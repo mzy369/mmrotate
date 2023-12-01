@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from mmdet.models.losses.utils import weighted_loss
 from mmdet.models.losses import smooth_l1_loss, SmoothL1Loss
-
+from torch.nn import functional as F
 from ..builder import ROTATED_LOSSES
 
 
@@ -43,8 +43,7 @@ def probabilistic_l1_loss(pred,
         avg_factor=avg_factor,
         **kwargs
     )
-
-    loss_covariance_regularize = 0.5 * bbox_cov
+    loss_covariance_regularize = 0.5 * bbox_cov.mean()
     loss_box_reg += loss_covariance_regularize
 
     return loss_box_reg
