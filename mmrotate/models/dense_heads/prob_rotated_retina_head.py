@@ -169,7 +169,7 @@ class ProbabilisticRetinaNetHead(RotatedAnchorHead):
 
         return logits, bbox_reg, logits_var, bbox_cov
 
-    def loss_single(self, cls_score, bbox_pred, logits_var, bbox_conv, anchors, labels, label_weights,
+    def loss_single(self, cls_score, bbox_pred, logits_var, bbox_cov, anchors, labels, label_weights,
                     bbox_targets, bbox_weights, num_total_samples):
         """Compute loss of a single scale level.
 
@@ -212,7 +212,7 @@ class ProbabilisticRetinaNetHead(RotatedAnchorHead):
         bbox_targets = bbox_targets.reshape(-1, 5)
         bbox_weights = bbox_weights.reshape(-1, 5)
         bbox_pred = bbox_pred.permute(0, 2, 3, 1).reshape(-1, 5)
-        bbox_conv = bbox_conv.permute(0, 2, 3, 1).reshape(-1, 5)
+        bbox_cov = bbox_cov.permute(0, 2, 3, 1).reshape(-1, 5)
         if self.reg_decoded_bbox:
             anchors = anchors.reshape(-1, 5)
             bbox_pred = self.bbox_coder.decode(anchors, bbox_pred)
@@ -220,17 +220,17 @@ class ProbabilisticRetinaNetHead(RotatedAnchorHead):
         loss_bbox = self.loss_bbox(
             bbox_pred,
             bbox_targets,
-            bbox_conv,
+            bbox_cov,
             bbox_weights,
             avg_factor=num_total_samples)
         return loss_cls, loss_bbox
 
-    @force_fp32(apply_to=('cls_scores', 'bbox_preds', 'logits_var', 'bbox_conv'))
+    @force_fp32(apply_to=('cls_scores', 'bbox_preds', 'logits_var', 'bbox_cov'))
     def loss(self,
              cls_scores,
              bbox_preds,
              logits_var,
-             bbox_conv,
+             bbox_cov,
              gt_bboxes,
              gt_labels,
              img_metas,
@@ -238,6 +238,8 @@ class ProbabilisticRetinaNetHead(RotatedAnchorHead):
         """Compute losses of the head.
 
         Args:
+            logits_var:
+            bbox_cov:
             cls_scores (list[Tensor]): Box scores for each scale level
                 Has shape (N, num_anchors * num_classes, H, W)
             bbox_preds (list[Tensor]): Box energies / deltas for each scale
@@ -290,7 +292,7 @@ class ProbabilisticRetinaNetHead(RotatedAnchorHead):
             cls_scores,
             bbox_preds,
             logits_var,
-            bbox_conv,
+            bbox_cov,
             all_anchor_list,
             labels_list,
             label_weights_list,

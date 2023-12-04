@@ -3,15 +3,14 @@ import warnings
 
 import torch
 import torch.nn as nn
-from mmdet.models.losses.utils import weighted_loss
-from mmdet.models.losses import smooth_l1_loss, SmoothL1Loss
-from torch.nn import functional as F
+from mmdet.models.losses import smooth_l1_loss
+from mmdet.models.losses.utils import reduce_loss
 from ..builder import ROTATED_LOSSES
 
 
 def probabilistic_l1_loss(pred,
                           target,
-                          bbox_conv,
+                          bbox_cov,
                           weight=None,
                           beta=1.0,
                           reduction=None,
@@ -24,7 +23,7 @@ def probabilistic_l1_loss(pred,
         weight:
         avg_factor:
         reduction:
-        bbox_conv:
+        bbox_cov:
         pred (torch.Tensor): The prediction.
         target (torch.Tensor): The learning target of the prediction.
         beta (float, optional): The threshold in the piecewise function.
@@ -33,20 +32,55 @@ def probabilistic_l1_loss(pred,
     Returns:
         torch.Tensor: Calculated loss
     """
-    bbox_cov = torch.clamp(bbox_conv, -7.0, 7.0)
-    loss_box_reg = 0.5 * torch.exp(-bbox_cov) * smooth_l1_loss(
+    bbox_cov = torch.clamp(bbox_cov, -7.0, 7.0)
+    loss_box_reg = 0.5 * torch.exp(-bbox_cov) * _smooth_l1_loss(
         pred,
         target,
-        weight,
         beta=beta,
-        reduction=reduction,
-        avg_factor=avg_factor,
-        **kwargs
     )
-    loss_covariance_regularize = 0.5 * bbox_cov.mean()
+    loss_covariance_regularize = 0.5 * bbox_cov
     loss_box_reg += loss_covariance_regularize
 
+    if weight is not None:
+        loss_box_reg = loss_box_reg * weight
+
+    # if avg_factor is not specified, just reduce the loss
+    if avg_factor is None:
+        loss_box_reg = reduce_loss(loss_box_reg, reduction)
+    else:
+        # if reduction is mean, then average the loss by avg_factor
+        if reduction == 'mean':
+            # Avoid causing ZeroDivisionError when avg_factor is 0.0,
+            # i.e., all labels of an image belong to ignore index.
+            eps = torch.finfo(torch.float32).eps
+            loss_box_reg = loss_box_reg.sum() / (avg_factor + eps)
+        # if reduction is 'none', then do nothing, otherwise raise an error
+        elif reduction != 'none':
+            raise ValueError('avg_factor can not be used with reduction="sum"')
     return loss_box_reg
+
+
+def _smooth_l1_loss(pred, target, beta=1.0):
+    """Smooth L1 loss.
+
+    Args:
+        pred (torch.Tensor): The prediction.
+        target (torch.Tensor): The learning target of the prediction.
+        beta (float, optional): The threshold in the piecewise function.
+            Defaults to 1.0.
+
+    Returns:
+        torch.Tensor: Calculated loss
+    """
+    assert beta > 0
+    if target.numel() == 0:
+        return pred.sum() * 0
+
+    assert pred.size() == target.size()
+    diff = torch.abs(pred - target)
+    loss = torch.where(diff < beta, 0.5 * diff * diff / beta,
+                       diff - 0.5 * beta)
+    return loss
 
 
 @ROTATED_LOSSES.register_module()
